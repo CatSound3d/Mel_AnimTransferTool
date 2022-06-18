@@ -1,0 +1,54 @@
+string $sel[] = `ls -sl`;
+
+if (size($sel) != 1){
+	warning "No object selected";
+}else {
+	
+		copyKey -time ":"; //copies all the keys 
+
+
+
+	// Prevents multiple instances of the same window
+	if (`window -ex win_pasteTime`) {
+		deleteUI -window win_pasteTime;
+	}
+
+	// Creates the window, -t is text, wh are width and height, bgc is the background color
+	window -t "Transfer Animation Tool" -wh 500 100 -bgc 0.3 0.3 0.3 win_pasteTime;
+
+	// Creates an adjustable column layout
+	columnLayout -adj true;
+
+	// Creates a group of text fields, -l is a label tx_src = $sel[0]
+	textFieldGrp -l "Source Object" -editable false -tx $sel[0] tx_src;
+
+	intFieldGrp -l "Frame Offset Amount" -v1 0 int_offset;
+
+	// Creates a paste button, bgc is color, accessed through btn1
+	button -l "Paste Animation" -c "pasteKeys" -bgc 0.1 0.1 0.5 btn1;
+
+	// Creates a close button, bgc is color, accessed through btn2
+	button -l "Close Window" -c "deleteUI -window win_pasteTime" -bgc 0.2 0.2 0.2 btn2;
+
+	// Shows the window
+	showWindow win_pasteTime;
+
+	//global procedure that pastes the keys
+	global proc pasteKeys(){
+
+		int $offsetVal = `intFieldGrp -q -v1 int_offset`;
+
+		string $selObj_pasteKeys[] = `ls -sl`;
+        
+		for ($objQuant = 0; $objQuant < size($selObj_pasteKeys); $objQuant++){
+
+			int $ct = `currentTime -q`; //query current time
+			int $t = $ct + $offsetVal;
+
+			currentTime $t;
+
+			select $selObj_pasteKeys[$objQuant];
+			pasteKey -time 1 -float $t -option merge -copies 1 -connect 0 -timeOffset $offsetVal; //connect usually causes issues if dest has no keyframes
+		}
+	}
+}

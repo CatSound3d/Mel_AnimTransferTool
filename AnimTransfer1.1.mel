@@ -1,0 +1,75 @@
+// Automated Paste Connect Script
+
+// Prevents multiple instances of the same window
+if (`window -ex win_pasteTime`) {
+	deleteUI -window win_pasteTime;
+}
+
+/* ----------------------------------------------------------------------------------------------GRAPHICAL USER INTERFACE----------*/
+	// Creates the window, -t is text, wh are width and height, bgc is the background color
+	window -t "Transfer Animation Tool" -wh 300 200 -bgc 0.3 0.3 0.3 win_pasteTime;
+
+	// Creates an adjustable column layout
+	columnLayout -adj true;
+
+	intFieldGrp -l "Frame Offset Amount" -v1 0 int_offset;
+
+	checkBox -l "Maintaint Offset" -v 0 -ed 1 bool_offset;
+
+	//Creates a copy button,
+	button -l "Copy Animation" -c "copyKeys" -bgc 0.1 0.1 0.5 btn0;
+
+	// Creates a paste button, bgc is color, accessed through btn1
+	button -l "Paste Animation" -c "pasteKeys" -bgc 0.1 0.1 0.5 btn1;
+
+	// Creates a close button, bgc is color, accessed through btn2
+	button -l "Close Window" -c "deleteUI -window win_pasteTime" -bgc 0.2 0.2 0.2 btn2;
+
+	// Shows the window
+	showWindow win_pasteTime;
+/* --------------------------------------------------------------------------------------------------------------------------------*/
+
+// keycopying procedure
+global proc copyKeys() {
+
+	string $sel[] = `ls -sl`;
+
+	if (size($sel) != 1){
+		warning "Only one object exactly has to be selected as the source !";
+	}else {
+	
+			copyKey -time ":"; //copies all the keys
+			
+
+	}
+}
+
+//Keypasting procedure
+global proc pasteKeys(){
+
+	int $offsetVal = `intFieldGrp -q -v1 int_offset`;
+	int $boolKeyOffset = `checkBox -q -v bool_offset`;
+	string $selObj_pasteKeys[] = `ls -sl`;
+
+// loops over all selected objects and pastes the keyframes on them
+	for ($objQuant = 0; $objQuant < size($selObj_pasteKeys); $objQuant++){
+
+		int $ct = `currentTime -q`; //query current time
+		int $t = $ct + $offsetVal;
+
+		currentTime $t;
+
+		select $selObj_pasteKeys[$objQuant];
+
+		if($boolKeyOffset){
+
+			setKeyframe -breakdown 0 -hierarchy none -controlPoints 0 -shape 0; //paste connect doesn't work if there are no keyframes
+			timeSliderPasteKey true; //pastes the keys
+
+		}else{
+			pasteKey -time 1 -float $t -option merge -copies 1 -connect 0 -timeOffset $offsetVal;	
+		}
+	}
+}
+
+
